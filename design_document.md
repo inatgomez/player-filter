@@ -1,38 +1,67 @@
-# Role Metric Design Document
+# Player Filter - Position Design Document
 
-## Positions Covered
+## Problem
 
-- Fullback
-- Defensive midfielder
-- Creative midfielder
+## Design Choices
 
-## Metric Selection
+## Limitations
 
-### Fullback
+## Position Metrics
 
-| Metric                          | Definition | Justification                                                             |
-| ------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| Progressive passes per 90       | ...        | Fullbacks in positional play systems are expected to progress the ball... |
-| Pressures in final third per 90 | ...        | ...                                                                       |
+### Full Back
+
+**Deep Progressions**
+
+**Open Play xG Assisted**
+
+**Possession Adjusted Tackles & Interceptions**
+
+**Tackle/Dribbled Past %**
+
+**Possession Adjusted Pressures**
+
+**Aerial Win %**
+
+**Fouls**
+
+**Turnovers**
 
 ### Defensive Midfielder
 
-| Metric                          | Definition | Justification                                                             |
-| ------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| Progressive passes per 90       | ...        | Fullbacks in positional play systems are expected to progress the ball... |
-| Pressures in final third per 90 | ...        | ...                                                                       |
+**Deep Progressions**
 
-### Creative Midfielder
+**Open Play xG Assisted**
 
-| Metric                          | Definition | Justification                                                             |
-| ------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| Progressive passes per 90       | ...        | Fullbacks in positional play systems are expected to progress the ball... |
-| Pressures in final third per 90 | ...        | ...                                                                       |
+**Possession Adjusted Tackles & Interceptions**
+
+**Tackle/Dribbled Past %**
+
+**Possession Adjusted Pressures**
+
+**Fouls Won**
+
+**Turnovers**
+
+### Midfielder
+
+**Final Third Pass Forward %**
+
+**Touches In Box**
+
+**Open Play xG Assisted**
+
+**Shots per 90**
+
+**xG per 90**
+
+**xG/Shot**
+
+**Possession Adjusted Pressures**
+
+**Fouls Won**
+
+**Turnovers**
 
 ## Data Source
 
-[Statsbomb open data](https://github.com/statsbomb/open-data), La Liga 2021 to 2025 seasons. Event level data aggregated to player season level.
-
-## Known Limitations
-
-- Metrics are computed from available event data; metrics requiring tracking data (e.g. distance covered, press resistance under physical pressure) are excluded.
+[Statsbomb open data](https://github.com/statsbomb/open-data), La Liga 2017/2018 to 2020/2021 seasons.

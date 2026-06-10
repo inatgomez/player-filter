@@ -10,19 +10,19 @@ The central question is:
 
 _Which player-seasons show the strongest statistical profile for a specific tactical role within an attacking, positional style of football?_
 
-The output is a recruitment filter that allows users to explore player-seasons through individual performance metrics rather than a single overall score.
+If event data can identify player profiles associated with possession-oriented football using only a complete 2015/16 season, then the same methodology should remain applicable to richer and more recent datasets.
 
 ## Dataset and Scope
 
-The analysis uses StatsBomb open data from La Liga between the 2017/18 and 2020/21 seasons.
+The analysis uses StatsBomb open data from the complete La Liga 2015/16 season.
 
-The decision to focus on a single competition is intentional. Player performance is heavily influenced by league context, tactical trends, and overall competition strength. Combining multiple leagues would introduce additional variables and require assumptions about how performance translates between competitions. Restricting the dataset to La Liga creates a more consistent comparison environment and allows the project to focus on role identification rather than cross-league translation.
+The decision to focus on a single season is driven by data completeness rather than historical preference. While StatsBomb open data includes matches from multiple seasons and competitions, coverage is not uniform across all available datasets. La Liga 2015/16 is the only league season within the open data repository that provides complete coverage of all 380 league matches.
 
-The unit of analysis is the player-season.
+Complete coverage is particularly important for a recruitment project because player comparisons depend on observing players under similar conditions. Partial season coverage introduces differences in data availability that are unrelated to player performance. A player may appear to have limited minutes or incomplete statistics simply because a portion of their matches is unavailable in the public dataset.
 
-Each player-season is treated as an independent observation. A player's profile can change substantially across multiple years due to tactical role changes, aging, injuries, managerial changes, or team context. Aggregating multiple seasons into a single profile would create a representation that may never have existed in practice. By preserving season-level observations, the project evaluates players within the specific context in which their performances occurred.
+By restricting the analysis to a fully observed season, the project ensures that player-season comparisons reflect football performance rather than dataset artifacts.
 
-As a result, rankings, percentile calculations, and radar charts are generated at the player-season level rather than the player level.
+Although the implementation uses La Liga 2015/16, the methodology and code are designed to be competition-agnostic. The pipeline can be applied to other competitions, seasons, or licensed datasets where sufficient coverage is available.
 
 ## Position Assignment Philosophy
 
@@ -128,6 +128,8 @@ The role is evaluated using:
 
 After assigning player-seasons to a role population, a minimum minutes threshold is applied to remove observations that are unlikely to provide a reliable representation of player performance.
 
+The minimum minutes threshold serves a methodological purpose rather than a user-interface purpose. Players with limited playing time can produce extreme metric values that are driven by small samples rather than repeatable performance. Applying a minimum threshold improves the reliability of percentile comparisons by ensuring that player-seasons represent meaningful periods of play.
+
 Percentile ranks are calculated separately within each role population. A percentile therefore represents performance relative to players performing comparable responsibilities rather than relative to the entire dataset.
 
 The project intentionally avoids creating a composite player rating.
@@ -150,7 +152,7 @@ Position assignment in football is inherently imperfect. Players may perform res
 
 The project relies exclusively on event data. Off-ball movement, positioning, spatial occupation, and other behaviours that require tracking data are not captured.
 
-The dataset is restricted to La Liga between 2017/18 and 2020/21. Results should not be interpreted as representative of other competitions without additional validation.
+The analysis is restricted to a single competition and season. While this improves internal consistency and eliminates issues caused by incomplete public data coverage, it also means the results reflect the tactical environment of La Liga 2015/16. Findings should not be generalized to other competitions, seasons, or football contexts without additional validation.
 
 Finally, player performance is highly dependent on team context. The project evaluates what a player produced within a specific tactical environment rather than attempting to estimate how those performances would translate to a different team or league.
 

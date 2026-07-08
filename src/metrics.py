@@ -135,19 +135,24 @@ def deep_progressions(events: pd.DataFrame) -> pd.DataFrame:
         actions["carry_end_location"].str[0] 
     )
     
-    completed = ( 
+    entered_final_third = ( 
         start_x < 80 
         ) & ( 
         end_x >= 80 
-    ) 
-    
-    result = ( 
-        actions.loc[completed] 
-        .groupby(GROUP_COLS) 
-        .size() 
-        .reset_index(name="deep_progressions") 
-        .rename(columns={"player": "player_name"}) 
-    ) 
+    )
+
+    complete_passes = (
+        (actions["type"] == "Pass")
+        & (actions["pass_outcome"] == None)
+    )
+
+    result = (
+        actions.loc[entered_final_third & complete_passes]
+        .groupby(GROUP_COLS)
+        .size()
+        .reset_index(name="deep_progressions")
+        .rename(columns={"player": "player_name"})
+    )
     
     validate_unique_player_rows(result, "deep_progressions") 
     

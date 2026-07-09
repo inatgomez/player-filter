@@ -65,7 +65,10 @@ def merge_metric_tables(metric_tables):
         lambda left, right:
         left.merge(
             right,
-            on="player_id",
+            on=[
+                "player_id",
+                "season",
+            ],
             how="outer",
             validate="one_to_one",
         ),
@@ -161,24 +164,31 @@ def main():
     profiles = merge_metric_tables(metric_tables)
 
     profiles = populations.merge(
-        profiles,
-        on="player_id",
-        how="left",
-        validate="one_to_one",
+    profiles,
+    on=[
+        "player_id",
+        "season",
+    ],
+    how="left",
+    validate="many_to_one",
     )
 
     profiles = profiles.merge(
-        minutes[
-            [
-                "player_id",
-                "minutes_played",
-                "appearances",
-                "squad_matches",
-            ]
-        ],
-        on="player_id",
-        how="left",
-        validate="one_to_one",
+    minutes[
+        [
+            "player_id",
+            "season",
+            "minutes_played",
+            "appearances",
+            "squad_matches",
+        ]
+    ],
+    on=[
+        "player_id",
+        "season",
+    ],
+    how="left",
+    validate="many_to_one",
     )
 
     missing_minutes = (

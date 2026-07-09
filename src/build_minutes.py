@@ -106,7 +106,11 @@ def main():
             )
         )
         .groupby(
-            ["player_id", "player_name"],
+            [
+                "player_id",
+                "player_name",
+                "season",
+            ],
             as_index=False,
         )
         .agg(

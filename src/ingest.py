@@ -28,12 +28,27 @@ matches_clean = matches_df[
 
 matches_clean.to_parquet("data/raw/matches.parquet", index=False)
 
+match_metadata = matches_clean.copy()
+
 event_frames = []
 
 for match_id in tqdm(matches_df["match_id"]):
+
     events = sb.events(match_id=match_id)
 
     events["match_id"] = match_id
+
+    metadata = match_metadata.loc[
+        match_metadata["match_id"] == match_id
+    ].iloc[0]
+
+    events["competition_name"] = (
+        metadata["competition_name"]
+    )
+
+    events["season"] = (
+        metadata["season"]
+    )
 
     event_frames.append(events)
 
@@ -47,11 +62,26 @@ events_df.to_parquet("data/raw/events.parquet", index=False)
 lineup_frames = []
 
 for match_id in tqdm(matches_df["match_id"]):
+
     lineup = sb.lineups(match_id)
 
+    metadata = match_metadata.loc[
+        match_metadata["match_id"] == match_id
+    ].iloc[0]
+
     for team_name, team_df in lineup.items():
+
         team_df["match_id"] = match_id
+
         team_df["team_name"] = team_name
+
+        team_df["competition_name"] = (
+            metadata["competition_name"]
+        )
+
+        team_df["season"] = (
+            metadata["season"]
+        )
 
         lineup_frames.append(team_df)
 

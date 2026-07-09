@@ -1,4 +1,5 @@
 from functools import reduce
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -19,20 +20,16 @@ from metrics import (
     fouls_won,
 )
 
+RAW_DIR = Path("data/raw")
+PROCESSED_DIR = Path("data/processed")
 
-EVENTS_PATH = "data/raw/events.parquet"
+EVENTS_PATH = RAW_DIR / "events.parquet"
 
-MINUTES_PATH = (
-    "data/processed/player_minutes_summary.parquet"
-)
+MINUTES_PATH = PROCESSED_DIR / "player_minutes_summary.parquet"
 
-POPULATIONS_PATH = (
-    "data/processed/player_populations.parquet"
-)
+POPULATIONS_PATH = PROCESSED_DIR / "player_populations.parquet"
 
-OUTPUT_PATH = (
-    "data/processed/profiles.parquet"
-)
+OUTPUT_PATH = PROCESSED_DIR / "player_profiles.parquet"
 
 PROFILE_KEY = [
     "player_id",
@@ -43,18 +40,23 @@ def report_shape(name, df):
     print(f"{name:<35} {df.shape}")
 
 
-def validate_unique_players(df, name):
+def validate_unique_key(
+    df,
+    key_cols,
+    name,
+):
 
     duplicates = (
-        df["player_id"]
-        .duplicated()
+        df.duplicated(key_cols)
         .sum()
     )
 
     if duplicates:
+
         raise ValueError(
             f"{name}: "
-            f"{duplicates} duplicate players"
+            f"{duplicates} duplicate rows "
+            f"for key {key_cols}"
         )
     
 def merge_metric_tables(metric_tables):
@@ -155,13 +157,6 @@ def main():
 
         fouls_won(events),
     ]
-
-    for metric_df in metric_tables:
-
-        validate_unique_players(
-            metric_df,
-            metric_df.columns[-1],
-        )
 
     profiles = merge_metric_tables(metric_tables)
 

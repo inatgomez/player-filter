@@ -27,14 +27,16 @@ def validate_unique_player_rows(df:pd.DataFrame, metric_name:str) -> None:
             f"{metric_name}: found {duplicates} duplicated player rows."
         )
     
-def empty_metric(metric_name:str) -> pd.DataFrame:
-    """
-    Standard empty return shape.
-    """
-
-    return pd.DataFrame(
-        columns=GROUP_COLS + [metric_name]
+    if len(df) == 0:
+        raise ValueError (
+            f"{metric_name}: returned 0 rows"
+        )
+    
+    print(
+        f"{metric_name}: "
+        f"{len(df):,} rows"
     )
+
 
 def compute_team_match_possession(events:pd.DataFrame) -> pd.DataFrame:
     """
@@ -141,13 +143,15 @@ def deep_progressions(events: pd.DataFrame) -> pd.DataFrame:
         end_x >= 80 
     )
 
-    complete_passes = (
-        (actions["type"] == "Pass")
-        & (actions["pass_outcome"] == None)
+    completed_pass = (
+        (events["type"] == "Pass")
+        & (events["pass_outcome"].isna())
     )
 
+    carry = events["type"] == "Carry"
+
     result = (
-        actions.loc[entered_final_third & complete_passes]
+        actions.loc[entered_final_third & completed_pass | carry]
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="deep_progressions")
@@ -172,7 +176,7 @@ def turnovers(events: pd.DataFrame) -> pd.DataFrame:
     miscontrols = (events["type"] == "Miscontrol")
 
     failed_dribbles = (
-        events["type"] == "Dribble") & (events["outcome"] == "Incomplete"
+        events["type"] == "Dribble") & (events["dribble_outcome"] != "Complete"
     )
 
     turnover_events = miscontrols | failed_dribbles
@@ -453,6 +457,8 @@ def padj_tackles_interceptions(events: pd.DataFrame, possession_table: pd.DataFr
     validate_columns(events, ["player_id", "player_name", "match_id", "team", "type", "duel_type"], "padj_tackles_interceptions")
 
     tackles = (
+        events["type"] == "Duel"
+        &
         events["duel_type"] == "Tackle"
     )
 
@@ -630,7 +636,7 @@ def touches_in_box(events: pd.DataFrame) -> pd.DataFrame:
             |
             (
                 events["pass_outcome"]
-                != "Incomplete"
+                == "Pass Offside"
             )
         )
     )
@@ -653,13 +659,11 @@ def touches_in_box(events: pd.DataFrame) -> pd.DataFrame:
         )
         &
         (
-            events["duel_outcome"].isin(
-                [
-                    "Won",
-                    "Success",
-                    "Success In Play",
-                    "Success Out",
-                ]
+            ~events["duel_outcome"].isin(
+        [
+            "Lost In Play",
+            "Lost Out"
+        ]
             )
         )
     )

@@ -3,7 +3,6 @@ import pandas as pd
 
 GROUP_COLS = [
     "player_id",
-    "player_name",
     "season",
 ]
 
@@ -100,23 +99,23 @@ def compute_team_match_possession(events:pd.DataFrame) -> pd.DataFrame:
             }
         )
 
-        possession = pd.DataFrame(possession_rows)
+    possession = pd.DataFrame(possession_rows)
 
-        possession["possession"] = (
-            possession["team_passes"] /
-            (
-                possession["team_passes"] + possession["opponent_passes"]
-            )
+    possession["possession"] = (
+        possession["team_passes"] /
+        (
+            possession["team_passes"] + possession["opponent_passes"]
         )
+    )
 
-        possession["adjustment_factor"] = (
-            2 /
-            (
-                1 + np.exp(-10 * (possession["possession"] - 0.5))
-            )
+    possession["adjustment_factor"] = (
+        2 /
+        (
+            1 + np.exp(-10 * (possession["possession"] - 0.5))
         )
+    )
 
-        return possession
+    return possession
     
 def deep_progressions(events: pd.DataFrame) -> pd.DataFrame:
     """
@@ -125,7 +124,6 @@ def deep_progressions(events: pd.DataFrame) -> pd.DataFrame:
 
     required = [ 
         "player_id", 
-        "player",
         "season", 
         "type", 
         "location", 
@@ -158,14 +156,13 @@ def deep_progressions(events: pd.DataFrame) -> pd.DataFrame:
         & (events["pass_outcome"].isna())
     )
 
-    carry = events["type"] == "Carry"
+    carry = (events["type"] == "Carry")
 
     result = (
         actions.loc[entered_final_third & completed_pass | carry]
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="deep_progressions")
-        .rename(columns={"player": "player_name"})
     )
     
     validate_unique_player_rows(result, "deep_progressions") 
@@ -179,14 +176,14 @@ def turnovers(events: pd.DataFrame) -> pd.DataFrame:
 
     validate_columns(
         events,
-        ["player_id", "player", "season", "type", "outcome"],
+        ["player_id", "season", "type"],
         "turnovers"
     )
 
     miscontrols = (events["type"] == "Miscontrol")
 
     failed_dribbles = (
-        events["type"] == "Dribble") & (events["dribble_outcome"] != "Complete"
+        (events["type"] == "Dribble") & (events["dribble_outcome"] != "Complete")
     )
 
     turnover_events = miscontrols | failed_dribbles
@@ -196,7 +193,6 @@ def turnovers(events: pd.DataFrame) -> pd.DataFrame:
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="turnovers")
-        .rename(columns={"player": "player_name"})
     )
 
     validate_unique_player_rows(result, "turnovers")
@@ -208,14 +204,13 @@ def fouls(events: pd.DataFrame) -> pd.DataFrame:
     Fouls committed count.
     """
 
-    validate_columns(events, ["player_id", "player", "season", "type"], "fouls")
+    validate_columns(events, ["player_id", "season", "type"], "fouls")
 
     result = (
-        events.loc[events["type"] == "Foul"]
+        events.loc[events["type"] == "Foul Committed"]
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="fouls")
-        .rename(columns={"player": "player_name"})
     )
 
     validate_unique_player_rows(result, "fouls")
@@ -227,14 +222,13 @@ def fouls_won(events:pd.DataaFrame) -> pd.DataFrame:
     Fouls won count.
     """
 
-    validate_columns(events, ["player_id", "player", "season", "type"], "fouls_won")
+    validate_columns(events, ["player_id", "season", "type"], "fouls_won")
 
     result = (
         events.loc[events["type"] == "Foul Won"]
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="fouls_won")
-        .rename(columns={"player": "player_name"})
     )
 
     validate_unique_player_rows(result, "fouls_won")
@@ -248,7 +242,7 @@ def shots(events: pd.DataFrame) -> pd.DataFrame:
     
     validate_columns(
         events,
-        ["player_id", "player", "season", "type"],
+        ["player_id", "season", "type"],
         "shots"
     )
 
@@ -257,7 +251,6 @@ def shots(events: pd.DataFrame) -> pd.DataFrame:
         .groupby(GROUP_COLS)
         .size()
         .reset_index(name="shots")
-        .rename(columns={"player": "player_name"})
     )
 
     validate_unique_player_rows(
@@ -275,7 +268,6 @@ def npxg(events: pd.DataFrame) -> pd.DataFrame:
         events,
         [
             "player_id",
-            "player",
             "season",
             "type",
             "shot_statsbomb_xg",
@@ -299,7 +291,6 @@ def npxg(events: pd.DataFrame) -> pd.DataFrame:
         )["shot_statsbomb_xg"]
         .sum()
         .reset_index(name="npxg")
-        .rename(columns={"player": "player_name"})
     )
 
     validate_unique_player_rows(
@@ -337,7 +328,7 @@ def open_play_xg_assisted(events: pd.DataFrame) -> pd.DataFrame:
     Sum of xG from open-play shots assisted by the player.
     """
 
-    validate_columns(events, ["player_id", "player_name", "season","type", "shot_type", "shot_statsbomb_xg", "pass_assisted_shot_id"], "open_play_xg_assisted")
+    validate_columns(events, ["player_id", "season", "type", "shot_type", "shot_statsbomb_xg", "pass_assisted_shot_id"], "open_play_xg_assisted")
 
     shots = (
         events.loc[
@@ -362,7 +353,7 @@ def open_play_xg_assisted(events: pd.DataFrame) -> pd.DataFrame:
             events["pass_assisted_shot_id"].notna(),
             [
                 "player_id",
-                "player_name",
+                "season",
                 "pass_assisted_shot_id",
             ]
         ]
@@ -395,7 +386,7 @@ def aerial_win_pct(events: pd.DataFrame) -> pd.DataFrame:
     Aerial duels a player enters and wins.
     """
 
-    validate_columns(events, ["player_id", "player_name", "season", "type", "duel_type", "pass_aerial_won", "clearance_aerial_won", "shot_aerial_won", "miscontrol_aerial_won"], "aerial_win_pct")
+    validate_columns(events, ["player_id", "season", "type", "duel_type", "pass_aerial_won", "clearance_aerial_won", "shot_aerial_won", "miscontrol_aerial_won"], "aerial_win_pct")
 
     aerial_wins = (
         (
@@ -465,23 +456,23 @@ def padj_tackles_interceptions(events: pd.DataFrame, possession_table: pd.DataFr
     Tackles + interceptions adjusted by match possession.
     """
 
-    validate_columns(events, ["player_id", "player_name", "season", "match_id", "team", "type", "duel_type"], "padj_tackles_interceptions")
+    validate_columns(events, ["player_id", "season", "match_id", "team", "type", "duel_type"], "padj_tackles_interceptions")
 
     tackles = (
-        events["type"] == "Duel"
+        (events["type"] == "Duel")
         &
-        events["duel_type"] == "Tackle"
+        (events["duel_type"] == "Tackle")
     )
 
     interceptions = (
-        events["type"] == "Interception"
+        (events["type"] == "Interception")
     )
 
     actions = events.loc[
         tackles | interceptions,
         [
             "player_id",
-            "player_name",
+            "season",
             "match_id",
             "team",
         ]
@@ -518,13 +509,12 @@ def padj_pressures(events: pd.DataFrame, possession_table: pd.DataFrame,) -> pd.
     Interceptions adjusted by possession.
     """
 
-    validate_columns(events, ["player_id", "player_name", "season", "match_id", "team", "type"], "padj_pressures")
+    validate_columns(events, ["player_id", "season", "match_id", "team", "type"], "padj_pressures")
 
     interceptions = events.loc[
         events["type"] == "Interception",
         [
             "player_id",
-            "player_name",
             "season",
             "match_id",
             "team",
@@ -560,7 +550,7 @@ def tackle_dribbled_past_pct(events: pd.DataFrame,) -> pd.DataFrame:
     Percentage of duels a player wins when they are dribbled at.
     """
 
-    validate_columns(events, ["player_id", "player_name", "season", "type", "duel_type"], "tackle_dribbled_past_pct")
+    validate_columns(events, ["player_id", "season", "type", "duel_type"], "tackle_dribbled_past_pct")
 
     tackles = (
         events.loc[
@@ -627,7 +617,7 @@ def touches_in_box(events: pd.DataFrame) -> pd.DataFrame:
     18 <= y <= 62
     """
 
-    validate_columns(events, ["player_id", "player_name", "season","type", "location", "pass_outcome", "dribble_outcome", "duel_type", "duel_outcome", "interception_outcome"], "touches_in_box")
+    validate_columns(events, ["player_id", "season","type", "location", "pass_outcome", "dribble_outcome", "duel_type", "duel_outcome", "interception_outcome"], "touches_in_box")
 
     x = events["location"].str[0]
     y = events["location"].str[1]
@@ -644,7 +634,7 @@ def touches_in_box(events: pd.DataFrame) -> pd.DataFrame:
         (events["type"] == "Pass")
         &
         (
-            events["pass_outcome"].isna()
+            (events["pass_outcome"].isna())
             |
             (
                 events["pass_outcome"]

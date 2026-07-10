@@ -26,7 +26,6 @@ OUTPUT_DIR = Path("data/processed")
 
 LINEUPS_PATH = RAW_DIR / "lineups.parquet"
 EVENTS_PATH = RAW_DIR / "events.parquet"
-MATCHES_PATH = RAW_DIR / "matches.parquet"
 
 OUTPUT_PATH = OUTPUT_DIR / "player_populations.parquet"
 
@@ -82,16 +81,10 @@ def extract_positions(position_history):
     ]
 
 
-def build_lineup_position_shares(lineups, matches):
+def build_lineup_position_shares(lineups):
     """
     Calculate lineup-based position shares per player-season.
     """
-
-    lineups = lineups.merge(
-        matches,
-        on="match_id",
-        how="left"
-    )
 
     lineups["position_list"] = (
         lineups["positions"]
@@ -163,16 +156,10 @@ def build_lineup_position_shares(lineups, matches):
     return shares
 
 
-def build_event_position_shares(events, matches):
+def build_event_position_shares(events):
     """
     Calculate event-based position shares per player-season.
     """
-
-    events = events.merge(
-        matches,
-        on="match_id",
-        how="left"
-    )
 
     position_counts = (
         events
@@ -266,19 +253,12 @@ def main():
 
     lineups = pd.read_parquet(LINEUPS_PATH)
     events = pd.read_parquet(EVENTS_PATH)
-    matches = pd.read_parquet(MATCHES_PATH)
 
     print("Building position shares...")
 
-    lineup_shares = build_lineup_position_shares(
-        lineups,
-        matches,
-    )
+    lineup_shares = build_lineup_position_shares(lineups,)
 
-    event_shares = build_event_position_shares(
-        events,
-        matches,
-    )
+    event_shares = build_event_position_shares(events,)
 
     population_tables = []
 

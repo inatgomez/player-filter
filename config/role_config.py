@@ -45,3 +45,8 @@ DISPLAY_NAMES = {
     "npxg_per_shot": "NPxG / Shot",
     "fouls_won_per90": "Fouls Won /90",
 }
+
+LOWER_IS_BETTER = {
+    "turnovers_per90",
+    "fouls_per90",
+}

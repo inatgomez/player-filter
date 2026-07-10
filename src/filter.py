@@ -112,3 +112,50 @@ for i, metric in enumerate(metrics, start=1):
 metric_idx = int(input("> ")) - 1
 selected_metric = metrics[metric_idx]
 
+ascending = (
+    selected_metric
+    in LOWER_IS_BETTER
+)
+
+population["percentile"] = calculate_percentile(
+    population[selected_metric],
+    ascending=ascending
+)
+
+population = population.sort_values(
+    selected_metric,
+    ascending=ascending
+)
+
+display_cols = [
+    "player_name",
+    "competition_name",
+    "season",
+    "minutes_played",
+    selected_metric,
+    "percentile",
+]
+
+print(
+    population[display_cols]
+    .head(20)
+    .to_string(index=False)
+)
+
+print("\nGenerate radar?")
+print("y/n")
+
+if input("> ").lower() == "y":
+
+    rows = input(
+        "\nEnter row numbers (e.g. 1,3,5): "
+    )
+
+    selected_rows = [
+        int(x.strip()) - 1
+        for x in rows.split(",")
+    ]
+
+    radar_profiles = (
+        population.iloc[selected_rows]
+    )

@@ -315,7 +315,7 @@ def search_flow(profiles):
 
     radar_prompt(matches)
 
-def radar_prompt(df):
+def radar_prompt(population):
 
     answer = input(
         "\nGenerate radar(s)? [y/n]: "
@@ -337,7 +337,7 @@ def radar_prompt(df):
         ]
 
         selected_profiles = (
-            df.iloc[row_ids]
+            population.iloc[row_ids]
             ["profile_id"]
             .tolist()
         )
@@ -357,7 +357,8 @@ def radar_prompt(df):
         print(pid)
 
     generate_radars(
-        profile_ids=selected_profiles
+        profile_ids=selected_profiles,
+        population=population,
     )
 
 def main():

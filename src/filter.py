@@ -128,9 +128,11 @@ population = population.sort_values(
 )
 
 display_cols = [
+    "profile_id",
     "player_name",
     "competition_name",
     "season",
+    "role",
     "minutes_played",
     selected_metric,
     "percentile",
@@ -156,6 +158,8 @@ if input("> ").lower() == "y":
         for x in rows.split(",")
     ]
 
-    radar_profiles = (
+    selected_profiles = (
         population.iloc[selected_rows]
+        ["profile_id"]
+        .tolist()
     )

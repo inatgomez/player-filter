@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import uuid
 
 from metrics import (
     compute_team_match_possession,
@@ -35,6 +36,10 @@ PROFILE_KEY = [
     "player_id",
     "season",
 ]
+
+PROFILE_NAMESPACE = uuid.UUID(
+    "3d1bb8a4-1f91-4f7d-a86f-2f4b89a3e001"
+)
 
 def report_shape(name, df):
     print(f"{name:<35} {df.shape}")
@@ -108,6 +113,25 @@ def add_derived_metrics(df):
         df["shots"] > 0,
         df["npxg"] / df["shots"],
         np.nan,
+    )
+
+    return df
+
+def add_profile_id(df):
+
+    df["profile_id"] = df.apply(
+        lambda row: str(
+            uuid.uuid5(
+                PROFILE_NAMESPACE,
+                (
+                    f"{row['player_id']}|"
+                    f"{row['competition_name']}|"
+                    f"{row['season']}|"
+                    f"{row['role']}"
+                )
+            )
+        ),
+        axis=1,
     )
 
     return df
@@ -234,6 +258,7 @@ def main():
         profiles.duplicated(
             subset=[
                 "player_id",
+                "competition_name",
                 "role",
                 "season",
             ]
@@ -247,6 +272,16 @@ def main():
             f"{duplicates} duplicate "
             f"player-role-season rows."
         )
+    
+    profiles = add_profile_id(
+    profiles
+    )
+
+    validate_unique_key(
+    profiles,
+    ["profile_id"],
+    "profiles",
+    )
     
     report_shape(
         "profiles",

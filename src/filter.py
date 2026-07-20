@@ -58,7 +58,7 @@ def add_population_percentiles(
             population[metric]
             .rank(
                 pct=True,
-                ascending=lower_is_better,
+                ascending=not lower_is_better,
             )
             .mul(100)
             .round(1)

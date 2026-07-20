@@ -81,6 +81,7 @@ def build_population(
             population["competition_name"].unique()
         )
 
+        print_header("Choose at least one competition")
         print()
 
         for i, comp in enumerate(
@@ -103,6 +104,7 @@ def build_population(
             population["season"].unique()
         )
 
+        print_header("Choose at least one season")
         print()
 
         for i, season in enumerate(
@@ -126,6 +128,7 @@ def build_population(
             population["season"].unique()
         )
 
+        print_header("Choose at least one season")
         print()
 
         for i, season in enumerate(
@@ -260,7 +263,7 @@ def ranking_flow(profiles):
 
     print(
         population[display_cols]
-        .head(20)
+        .head(10)
         .to_string(index=True)
     )
 
@@ -285,7 +288,7 @@ def search_flow(profiles):
 
     if matches.empty:
 
-        print("\nNo matches found.")
+        print("\nNo matches found. Make sure to use full name.")
         return
 
     matches = matches.reset_index(
@@ -394,7 +397,7 @@ def main():
         elif choice == "3":
 
             print(
-                "\nGoodbye."
+                "\nSee you in your next exploration."
             )
             break
 

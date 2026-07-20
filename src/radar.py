@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from mplsoccer import Radar
 
 from config.role_config import (
     RADAR_METRICS,
@@ -134,52 +134,64 @@ def generate_single_radar(
 
     metrics = RADAR_METRICS[role]
 
-    labels, values = build_radar_values(
+    (
+        labels,
+        values,
+        percentiles,
+    ) = build_radar_values(
         profile,
         metrics,
     )
 
-    num_vars = len(labels)
-
-    angles = np.linspace(
-        0,
-        2 * np.pi,
-        num_vars,
-        endpoint=False,
-    ).tolist()
-
-    angles += angles[:1]
-
-    fig, ax = plt.subplots(
-        figsize=(8, 8),
-        subplot_kw=dict(
-            polar=True
-        ),
+    radar = Radar(
+        params=labels,
+        min_range=[0] * len(labels),
+        max_range=[100] * len(labels),
     )
 
-    ax.plot(
-        angles,
+    fig, ax = radar.setup_axis(
+        figsize=(10, 10),
+    )
+
+    radar.draw_circles(
+        ax=ax,
+        facecolor="#f7f7f7",
+        edgecolor="#dddddd",
+        linewidth=0.8,
+    )
+
+    radar.draw_radar(
         values,
-        linewidth=2,
+        ax=ax,
+        kwargs_radar={
+            "linewidth": 3,
+            "color": "#1565c0",
+        },
+        kwargs_rings={
+            "facecolor": "#1565c0",
+            "alpha": 0.18,
+        },
     )
 
-    ax.fill(
-        angles,
-        values,
-        alpha=0.25,
+    radar.draw_range_labels(
+        ax=ax,
+        fontsize=10,
     )
 
-    ax.set_xticks(
-        angles[:-1]
+    radar.draw_param_labels(
+        ax=ax,
+        fontsize=11,
     )
 
-    ax.set_xticklabels(
-        labels
-    )
-
-    ax.set_ylim(
-        0,
-        100,
+    ax.add_artist(
+        plt.Circle(
+            (0, 0),
+            50,
+            fill=False,
+            linestyle="--",
+            linewidth=1.2,
+            color="#888888",
+        )
     )
 
     ax.set_title(
@@ -196,12 +208,12 @@ def generate_single_radar(
         profile
     )
 
-    plt.tight_layout()
     plt.savefig(
         filepath,
         dpi=300,
         bbox_inches="tight",
     )
+
     plt.close()
 
     print(
@@ -213,11 +225,12 @@ def generate_comparison_radar(
     population: pd.DataFrame,
 ):
 
-    if len(profile_ids) < 2:
+    if len(profile_ids) != 2:
 
         raise ValueError(
-            "Comparison radar requires "
-            "at least two profiles."
+            "Comparison radar "
+            "requires exactly "
+            "two players."
         )
 
     profiles = population[
@@ -225,20 +238,10 @@ def generate_comparison_radar(
         .isin(profile_ids)
     ].copy()
 
-    roles = (
+    role = (
         profiles["role"]
-        .unique()
-        .tolist()
+        .iloc[0]
     )
-
-    if len(roles) != 1:
-
-        raise ValueError(
-            "All comparison profiles "
-            "must share the same role."
-        )
-
-    role = roles[0]
 
     metrics = RADAR_METRICS[role]
 
@@ -247,84 +250,90 @@ def generate_comparison_radar(
         for m in metrics
     ]
 
-    num_vars = len(labels)
-
-    angles = np.linspace(
-        0,
-        2 * np.pi,
-        num_vars,
-        endpoint=False,
-    ).tolist()
-
-    angles += angles[:1]
-
-    fig, ax = plt.subplots(
-        figsize=(8, 8),
-        subplot_kw=dict(
-            polar=True
-        ),
+    radar = Radar(
+        params=labels,
+        min_range=[0] * len(labels),
+        max_range=[100] * len(labels),
     )
 
-    for _, profile in profiles.iterrows():
+    fig, ax = radar.setup_axis(
+        figsize=(10, 10),
+    )
+
+    radar.draw_circles(
+        ax=ax,
+        facecolor="#f7f7f7",
+        edgecolor="#dddddd",
+        linewidth=0.8,
+    )
+
+    colors = [
+        "#1565c0",
+        "#d84315",
+    ]
+
+    linestyles = [
+        "-",
+        "--",
+    ]
+
+    for idx, (_, profile) in enumerate(
+        profiles.iterrows()
+    ):
 
         values = [
-            profile[f"{m}_pct"]
-            for m in metrics
+            radar_value(
+                metric,
+                profile[f"{metric}_pct"],
+            )
+            for metric in metrics
         ]
 
-        values.append(
-            values[0]
-        )
-
-        label = (
-            f"{profile['player_name']} | "
-            f"{profile['competition_name']} | "
-            f"{profile['season']}"
-        )
-
-        ax.plot(
-            angles,
+        radar.draw_radar(
             values,
-            linewidth=2,
-            label=label,
+            ax=ax,
+            kwargs_radar={
+                "linewidth": 3,
+                "linestyle": linestyles[idx],
+                "color": colors[idx],
+                "label": profile[
+                    "player_name"
+                ],
+            },
+            kwargs_rings={
+                "facecolor": colors[idx],
+                "alpha": 0.15,
+            },
         )
 
-    ax.set_xticks(
-        angles[:-1]
+    radar.draw_range_labels(
+        ax=ax,
+        fontsize=10,
     )
 
-    ax.set_xticklabels(
-        labels
-    )
-
-    ax.set_ylim(
-        0,
-        100,
+    radar.draw_param_labels(
+        ax=ax,
+        fontsize=11,
     )
 
     ax.legend(
-        loc="upper right",
-        bbox_to_anchor=(1.3, 1.1),
-    )
-
-    ax.set_title(
-        f"{role} Comparison",
-        pad=30,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.08),
+        ncol=2,
+        frameon=False,
     )
 
     players = "_vs_".join(
         slugify(x)
         for x in profiles[
             "player_name"
-        ].tolist()
+        ]
     )
 
     filepath = (
         OUTPUT_DIR
         / f"{players}_{slugify(role)}.png"
     )
-
-    plt.tight_layout()
 
     plt.savefig(
         filepath,

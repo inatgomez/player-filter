@@ -140,7 +140,7 @@ def add_profile_id(df):
 
     return df
 
-def main():
+def build_profiles() -> None:
     
     print("\nLoading data...\n")
 
@@ -300,6 +300,10 @@ def main():
     print(
         f"\nSaved:\n{OUTPUT_PATH}\n"
     )
+
+def main():
+
+    build_profiles()
 
 if __name__ == "__main__":
     main()

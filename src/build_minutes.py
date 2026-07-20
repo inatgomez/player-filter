@@ -50,7 +50,7 @@ def calculate_player_match_minutes(
     return total_seconds / 60
 
 
-def main():
+def build_minutes() -> None:
 
     print("Loading data...")
 
@@ -157,6 +157,9 @@ def main():
         f"to {output_path}"
     )
 
+def main():
+
+    build_minutes()
 
 if __name__ == "__main__":
     main()

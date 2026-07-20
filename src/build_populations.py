@@ -242,7 +242,7 @@ def get_role_shares(
         )
     )
 
-def main():
+def build_populations() -> None:
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -353,6 +353,9 @@ def main():
         f"Saved {len(populations):,} rows to {OUTPUT_PATH}"
     )
 
+def main():
+
+    build_populations()
 
 if __name__ == "__main__":
     main()

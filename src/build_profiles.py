@@ -119,19 +119,23 @@ def add_derived_metrics(df):
 
 def add_profile_id(df):
 
-    df["profile_id"] = df.apply(
-        lambda row: str(
+    keys = (
+        df["player_id"].astype(str)
+        + "|"
+        + df["competition_name"]
+        + "|"
+        + df["season"]
+        + "|"
+        + df["role"]
+    )
+
+    df["profile_id"] = keys.map(
+        lambda x: str(
             uuid.uuid5(
                 PROFILE_NAMESPACE,
-                (
-                    f"{row['player_id']}|"
-                    f"{row['competition_name']}|"
-                    f"{row['season']}|"
-                    f"{row['role']}"
-                )
+                x
             )
-        ),
-        axis=1,
+        )
     )
 
     return df

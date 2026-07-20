@@ -8,158 +8,404 @@ from config.role_config import (
     LOWER_IS_BETTER,
 )
 
-PROFILES_PATH = Path("data/processed/player_profiles.parquet")
-
-def calculate_percentile(series, ascending=False):
-    return series.rank(
-        pct=True,
-        ascending=ascending
-    ) * 100
-
-profiles = pd.read_parquet(PROFILES_PATH)
-
-roles = sorted(profiles["role"].unique())
-
-for i, role in enumerate(roles, start=1):
-    print(f"{i}. {role}")
-
-role_idx = int(input("\nSelect role: ")) - 1
-selected_role = roles[role_idx]
-
-print("\nComparison scope:")
-print("1. Competition + Season")
-print("2. Season")
-print("3. Global")
-
-scope = input("> ")
-
-population = profiles[
-    profiles["role"] == selected_role
-].copy()
-
-if scope == "1":
-
-    competitions = sorted(
-        population["competition_name"].unique()
-    )
-
-    for i, comp in enumerate(competitions, start=1):
-        print(f"{i}. {comp}")
-
-    comp_idx = int(input("\nSelect competition: ")) - 1
-    selected_comp = competitions[comp_idx]
-
-    seasons = sorted(
-        population.loc[
-            population["competition_name"] == selected_comp,
-            "season"
-        ].unique()
-    )
-
-    for i, season in enumerate(seasons, start=1):
-        print(f"{i}. {season}")
-
-    season_idx = int(input("\nSelect season: ")) - 1
-    selected_season = seasons[season_idx]
-
-    population = population[
-        (population["competition_name"] == selected_comp)
-        &
-        (population["season"] == selected_season)
-    ]
-
-elif scope == "2":
-
-    seasons = sorted(
-        population["season"].unique()
-    )
-
-    for i, season in enumerate(seasons, start=1):
-        print(f"{i}. {season}")
-
-    season_idx = int(input("\nSelect season: ")) - 1
-    selected_season = seasons[season_idx]
-
-    population = population[
-        population["season"] == selected_season
-    ]
-
-default_minutes = 900
-
-minutes = input(
-    f"\nMinimum minutes [{default_minutes}]: "
-).strip()
-
-min_minutes = (
-    int(minutes)
-    if minutes
-    else default_minutes
+PROFILES_PATH = Path(
+    "data/processed/player_profiles.parquet"
 )
 
-population = population[
-    population["minutes_played"] >= min_minutes
-].copy()
+DEFAULT_MIN_MINUTES = 900
 
-metrics = ROLE_METRICS[selected_role]
+def load_profiles() -> pd.DataFrame:
 
-print("\nRanking metric:")
+    if not PROFILES_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing file: {PROFILES_PATH}"
+        )
 
-for i, metric in enumerate(metrics, start=1):
+    return pd.read_parquet(PROFILES_PATH)
+
+def choose_option(options, prompt):
+
+    while True:
+
+        try:
+
+            choice = int(input(prompt)) - 1
+
+            if 0 <= choice < len(options):
+                return options[choice]
+
+        except ValueError:
+            pass
+
+        print("Invalid selection.")
+
+
+def calculate_percentile(series, lower_is_better=False):
+
+    return (
+        series.rank(
+            pct=True,
+            ascending=lower_is_better,
+        )
+        * 100
+    ).round(1)
+
+
+def print_header(title):
+
+    print("\n" + "=" * 60)
+    print(title)
+    print("=" * 60)
+
+def build_population(
+    profiles: pd.DataFrame,
+    role: str,
+):
+
+    population = profiles[
+        profiles["role"] == role
+    ].copy()
+
+    print_header("Comparison Scope")
+
+    print("1. Competition + Season")
+    print("2. Season")
+    print("3. Global")
+
+    scope = input("\nSelect option: ").strip()
+
+    if scope == "1":
+
+        competitions = sorted(
+            population["competition_name"].unique()
+        )
+
+        print()
+
+        for i, comp in enumerate(
+            competitions,
+            start=1,
+        ):
+            print(f"{i}. {comp}")
+
+        competition = choose_option(
+            competitions,
+            "\nCompetition: ",
+        )
+
+        population = population[
+            population["competition_name"]
+            == competition
+        ]
+
+        seasons = sorted(
+            population["season"].unique()
+        )
+
+        print()
+
+        for i, season in enumerate(
+            seasons,
+            start=1,
+        ):
+            print(f"{i}. {season}")
+
+        season = choose_option(
+            seasons,
+            "\nSeason: ",
+        )
+
+        population = population[
+            population["season"] == season
+        ]
+
+    elif scope == "2":
+
+        seasons = sorted(
+            population["season"].unique()
+        )
+
+        print()
+
+        for i, season in enumerate(
+            seasons,
+            start=1,
+        ):
+            print(f"{i}. {season}")
+
+        season = choose_option(
+            seasons,
+            "\nSeason: ",
+        )
+
+        population = population[
+            population["season"] == season
+        ]
+
+    elif scope == "3":
+
+        print(
+            "\nWarning: Global populations may mix "
+            "different competitions and seasons."
+        )
+
+    else:
+
+        print("Invalid selection.")
+        return build_population(
+            profiles,
+            role,
+        )
+
+    return population
+
+def ranking_flow(profiles):
+
+    print_header("Role Selection")
+
+    roles = sorted(
+        profiles["role"].unique()
+    )
+
+    for i, role in enumerate(
+        roles,
+        start=1,
+    ):
+        print(f"{i}. {role}")
+
+    role = choose_option(
+        roles,
+        "\nRole: ",
+    )
+
+    population = build_population(
+        profiles,
+        role,
+    )
+
+    minutes_input = input(
+        f"\nMinimum minutes "
+        f"[{DEFAULT_MIN_MINUTES}]: "
+    ).strip()
+
+    min_minutes = (
+        int(minutes_input)
+        if minutes_input
+        else DEFAULT_MIN_MINUTES
+    )
+
+    population = population[
+        population["minutes_played"]
+        >= min_minutes
+    ].copy()
+
+    if population.empty:
+
+        print(
+            "\nNo players satisfy "
+            "the selected filters."
+        )
+        return
+
+    metrics = ROLE_METRICS[role]
+
+    print_header("Ranking Metric")
+
+    for i, metric in enumerate(
+        metrics,
+        start=1,
+    ):
+        print(
+            f"{i}. "
+            f"{DISPLAY_NAMES[metric]}"
+        )
+
+    metric = choose_option(
+        metrics,
+        "\nMetric: ",
+    )
+
+    lower_is_better = (
+        metric in LOWER_IS_BETTER
+    )
+
+    population["percentile"] = (
+        calculate_percentile(
+            population[metric],
+            lower_is_better,
+        )
+    )
+
+    population = population.sort_values(
+        metric,
+        ascending=lower_is_better,
+    ).reset_index(drop=True)
+
+    display_cols = [
+        "profile_id",
+        "player_name",
+        "competition_name",
+        "season",
+        "minutes_played",
+        "role",
+        metric,
+        "percentile",
+    ]
+
+    print_header(
+        f"Top Players "
+        f"({DISPLAY_NAMES[metric]})"
+    )
+
     print(
-        f"{i}. {DISPLAY_NAMES[metric]}"
+        population[display_cols]
+        .head(20)
+        .to_string(index=True)
     )
 
-metric_idx = int(input("> ")) - 1
-selected_metric = metrics[metric_idx]
+    radar_prompt(population)
 
-ascending = (
-    selected_metric
-    in LOWER_IS_BETTER
-)
+def search_flow(profiles):
 
-population["percentile"] = calculate_percentile(
-    population[selected_metric],
-    ascending=ascending
-)
+    print_header("Player Search")
 
-population = population.sort_values(
-    selected_metric,
-    ascending=ascending
-)
+    query = input(
+        "Player name: "
+    ).strip()
 
-display_cols = [
-    "profile_id",
-    "player_name",
-    "competition_name",
-    "season",
-    "role",
-    "minutes_played",
-    selected_metric,
-    "percentile",
-]
+    matches = profiles[
+        profiles["player_name"]
+        .str.contains(
+            query,
+            case=False,
+            na=False,
+        )
+    ].copy()
 
-print(
-    population[display_cols]
-    .head(20)
-    .to_string(index=False)
-)
+    if matches.empty:
 
-print("\nGenerate radar?")
-print("y/n")
+        print("\nNo matches found.")
+        return
 
-if input("> ").lower() == "y":
+    matches = matches.reset_index(
+        drop=True
+    )
+
+    display_cols = [
+        "profile_id",
+        "player_name",
+        "competition_name",
+        "season",
+        "role",
+        "minutes_played",
+    ]
+
+    print()
+
+    print(
+        matches[display_cols]
+        .to_string(index=True)
+    )
+
+    print(
+        "\nUse displayed row numbers "
+        "for radar generation."
+    )
+
+    radar_prompt(matches)
+
+def radar_prompt(df):
+
+    answer = input(
+        "\nGenerate radar(s)? [y/n]: "
+    ).lower()
+
+    if answer != "y":
+        return
 
     rows = input(
-        "\nEnter row numbers (e.g. 1,3,5): "
+        "\nEnter row numbers "
+        "(example: 0,2,4): "
+    ).strip()
+
+    try:
+
+        row_ids = [
+            int(x.strip())
+            for x in rows.split(",")
+        ]
+
+        selected_profiles = (
+            df.iloc[row_ids]
+            ["profile_id"]
+            .tolist()
+        )
+
+    except Exception:
+
+        print(
+            "\nInvalid selection."
+        )
+        return
+
+    print(
+        "\nSelected profile IDs:"
     )
 
-    selected_rows = [
-        int(x.strip()) - 1
-        for x in rows.split(",")
-    ]
+    for pid in selected_profiles:
+        print(pid)
 
-    selected_profiles = (
-        population.iloc[selected_rows]
-        ["profile_id"]
-        .tolist()
-    )
+    # future integration:
+    #
+    # from radar import generate_radars
+    #
+    # generate_radars(
+    #     profile_ids=selected_profiles
+    # )
+
+def main():
+
+    profiles = load_profiles()
+
+    while True:
+
+        print_header(
+            "PLAYER RECRUITMENT EXPLORER"
+        )
+
+        print("1. Explore Rankings")
+        print("2. Search Player")
+        print("3. Exit")
+
+        choice = input(
+            "\nSelect option: "
+        ).strip()
+
+        if choice == "1":
+
+            ranking_flow(
+                profiles
+            )
+
+        elif choice == "2":
+
+            search_flow(
+                profiles
+            )
+
+        elif choice == "3":
+
+            print(
+                "\nGoodbye."
+            )
+            break
+
+        else:
+
+            print(
+                "\nInvalid selection."
+            )
+
+
+if __name__ == "__main__":
+    main()

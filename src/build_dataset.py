@@ -1,4 +1,5 @@
 from pathlib import Path
+from tqdm import tqdm
 
 import pandas as pd
 from statsbombpy import sb
@@ -90,7 +91,11 @@ def build_competition_menu(
         "\nLoading competition coverage...\n"
     )
 
-    for idx, row in competitions.iterrows():
+    for idx, row in tqdm(
+    competitions.iterrows(),
+    total=len(competitions),
+    desc="Loading competition coverage"
+    ):
 
         try:
 
@@ -186,6 +191,23 @@ def get_user_selection(
             f"{row['season_name']} | "
             f"{row['match_count']} matches"
         )
+
+    total_matches = pd.to_numeric(
+    selected_rows["match_count"],
+    errors="coerce"
+    ).sum()
+
+    print("\nSummary:\n")
+
+    print(
+        f"{len(selected_rows)} "
+        f"competition-season(s)"
+    )
+
+    print(
+        f"{int(total_matches):,} "
+        f"total matches"
+    )
 
     return list(
         zip(

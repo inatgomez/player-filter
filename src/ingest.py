@@ -1,10 +1,15 @@
 import pandas as pd
 from statsbombpy import sb
 from tqdm import tqdm
+from time import perf_counter
 
 def build_raw_dataset(
     selections: list[tuple[int, int]]
 ) -> None:
+    
+    start = perf_counter()
+
+    print("\n[1/3] Loading matches...")
 
     matches = []
 
@@ -28,11 +33,18 @@ def build_raw_dataset(
 
     matches_clean.to_parquet("data/raw/matches.parquet", index=False)
 
+    print(f"Loaded {len(matches_df):,} matches.")
+
+    print(
+    f"\n[2/3] Loading events "
+    f"({len(matches_df):,} matches)..."
+    )
+
     match_metadata = matches_clean.copy()
 
     event_frames = []
 
-    for match_id in tqdm(matches_df["match_id"]):
+    for match_id in tqdm(matches_df["match_id"], desc="Events"):
 
         events = sb.events(match_id=match_id)
 
@@ -59,9 +71,14 @@ def build_raw_dataset(
 
     events_df.to_parquet("data/raw/events.parquet", index=False)
 
+    print(
+    f"\n[3/3] Loading lineups "
+    f"({len(matches_df):,} matches)..."
+    )
+
     lineup_frames = []
 
-    for match_id in tqdm(matches_df["match_id"]):
+    for match_id in tqdm(matches_df["match_id"], desc="Lineups"):
 
         lineup = sb.lineups(match_id)
 
@@ -92,7 +109,12 @@ def build_raw_dataset(
 
     lineups_df.to_parquet("data/raw/lineups.parquet", index=False)
 
-    print("Data ingestion complete.")
+    elapsed = perf_counter() - start
+
+    print(
+    f"\nData ingestion complete "
+    f"({elapsed:.1f}s)"
+    )
 
 
 def main():

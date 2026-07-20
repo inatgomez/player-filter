@@ -38,7 +38,7 @@ PROFILE_KEY = [
 ]
 
 PROFILE_NAMESPACE = uuid.UUID(
-    "3d1bb8a4-1f91-4f7d-a86f-2f4b89a3e001"
+    "52bff470-25e4-4e6f-84a4-d3e81402378d"
 )
 
 def report_shape(name, df):

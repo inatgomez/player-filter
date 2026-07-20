@@ -50,3 +50,35 @@ LOWER_IS_BETTER = {
     "turnovers_per90",
     "fouls_per90",
 }
+
+RADAR_METRICS = {
+    "Full Back": [
+        "deep_progressions_per90",
+        "open_play_xg_assisted_per90",
+        "turnovers_per90",
+        "aerial_win_pct",
+        "padj_tackles_interceptions_per90",
+        "padj_pressures_per90",
+        "fouls_per90",
+        "tackle_dribbled_past_pct",
+    ],
+    "Defensive Midfielder": [
+        "deep_progressions_per90",
+        "open_play_xg_assisted_per90",
+        "padj_tackles_interceptions_per90",
+        "tackle_dribbled_past_pct",
+        "padj_pressures_per90",
+        "fouls_per90",
+        "turnovers_per90",
+    ],
+    "Creative Midfielder": [
+        "touches_in_box_per90",
+        "open_play_xg_assisted_per90",
+        "shots_per90",
+        "npxg_per90",
+        "npxg_per_shot",
+        "padj_pressures_per90",
+        "fouls_won_per90",
+        "turnovers_per90",
+    ],
+}

@@ -7,6 +7,7 @@ from config.role_config import (
     DISPLAY_NAMES,
     LOWER_IS_BETTER,
 )
+from radar import generate_radars
 
 PROFILES_PATH = Path(
     "data/processed/player_profiles.parquet"
@@ -355,13 +356,9 @@ def radar_prompt(df):
     for pid in selected_profiles:
         print(pid)
 
-    # future integration:
-    #
-    # from radar import generate_radars
-    #
-    # generate_radars(
-    #     profile_ids=selected_profiles
-    # )
+    generate_radars(
+        profile_ids=selected_profiles
+    )
 
 def main():
 

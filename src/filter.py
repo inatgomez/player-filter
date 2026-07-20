@@ -41,16 +41,30 @@ def choose_option(options, prompt):
         print("Invalid selection.")
 
 
-def calculate_percentile(series, lower_is_better=False):
+def add_population_percentiles(
+    population: pd.DataFrame,
+    metrics: list[str],
+    ) -> pd.DataFrame:
 
-    return (
-        series.rank(
-            pct=True,
-            ascending=lower_is_better,
+    population = population.copy()
+
+    for metric in metrics:
+
+        lower_is_better = (
+            metric in LOWER_IS_BETTER
         )
-        * 100
-    ).round(1)
 
+        population[f"{metric}_pct"] = (
+            population[metric]
+            .rank(
+                pct=True,
+                ascending=lower_is_better,
+            )
+            .mul(100)
+            .round(1)
+        )
+
+    return population
 
 def print_header(title):
 
@@ -163,24 +177,10 @@ def build_population(
 
     return population
 
-def ranking_flow(profiles):
-
-    print_header("Role Selection")
-
-    roles = sorted(
-        profiles["role"].unique()
-    )
-
-    for i, role in enumerate(
-        roles,
-        start=1,
-    ):
-        print(f"{i}. {role}")
-
-    role = choose_option(
-        roles,
-        "\nRole: ",
-    )
+def build_filtered_population(
+    profiles: pd.DataFrame,
+    role: str,
+) -> pd.DataFrame:
 
     population = build_population(
         profiles,
@@ -209,6 +209,41 @@ def ranking_flow(profiles):
             "\nNo players satisfy "
             "the selected filters."
         )
+
+        return pd.DataFrame()
+
+    population = add_population_percentiles(
+        population,
+        ROLE_METRICS[role],
+    )
+
+    return population
+
+def ranking_flow(profiles):
+
+    print_header("Role Selection")
+
+    roles = sorted(
+        profiles["role"].unique()
+    )
+
+    for i, role in enumerate(
+        roles,
+        start=1,
+    ):
+        print(f"{i}. {role}")
+
+    role = choose_option(
+        roles,
+        "\nRole: ",
+    )
+
+    population = build_filtered_population(
+    profiles,
+    role,
+    )
+
+    if population.empty:
         return
 
     metrics = ROLE_METRICS[role]
@@ -234,10 +269,7 @@ def ranking_flow(profiles):
     )
 
     population["percentile"] = (
-        calculate_percentile(
-            population[metric],
-            lower_is_better,
-        )
+        population[f"{metric}_pct"]
     )
 
     population = population.sort_values(
@@ -288,7 +320,11 @@ def search_flow(profiles):
 
     if matches.empty:
 
-        print("\nNo matches found. Make sure to use full name.")
+        print(
+            "\nNo matches found. "
+            "Make sure to use full name."
+        )
+
         return
 
     matches = matches.reset_index(
@@ -305,18 +341,73 @@ def search_flow(profiles):
     ]
 
     print()
-
     print(
         matches[display_cols]
         .to_string(index=True)
     )
 
-    print(
-        "\nUse displayed row numbers "
-        "for radar generation."
+    try:
+
+        row = int(
+            input(
+                "\nSelect player row: "
+            )
+        )
+
+    except ValueError:
+
+        print(
+            "\nInvalid selection."
+        )
+
+        return
+
+    if row not in matches.index:
+
+        print(
+            "\nInvalid selection."
+        )
+
+        return
+
+    selected_profile = (
+        matches.iloc[row]
     )
 
-    radar_prompt(matches)
+    role = (
+        selected_profile["role"]
+    )
+
+    population = (
+        build_filtered_population(
+            profiles,
+            role,
+        )
+    )
+
+    if population.empty:
+        return
+
+    profile_id = (
+        selected_profile["profile_id"]
+    )
+
+    if profile_id not in set(
+        population["profile_id"]
+    ):
+
+        print(
+            "\nSelected player is not "
+            "part of the chosen "
+            "comparison population."
+        )
+
+        return
+
+    generate_radars(
+        profile_ids=[profile_id],
+        population=population,
+    )
 
 def radar_prompt(population):
 
@@ -329,7 +420,7 @@ def radar_prompt(population):
 
     rows = input(
         "\nEnter row numbers "
-        "(example: 0,2,4): "
+        "(example: 0,1): "
     ).strip()
 
     try:
@@ -339,25 +430,29 @@ def radar_prompt(population):
             for x in rows.split(",")
         ]
 
-        selected_profiles = (
-            population.iloc[row_ids]
-            ["profile_id"]
-            .tolist()
-        )
-
     except Exception:
 
         print(
             "\nInvalid selection."
         )
+
         return
 
-    print(
-        "\nSelected profile IDs:"
-    )
+    if len(row_ids) > 2:
 
-    for pid in selected_profiles:
-        print(pid)
+        print(
+            "\nComparison radar "
+            "supports a maximum "
+            "of two players."
+        )
+
+        return
+
+    selected_profiles = (
+        population.iloc[row_ids]
+        ["profile_id"]
+        .tolist()
+    )
 
     generate_radars(
         profile_ids=selected_profiles,

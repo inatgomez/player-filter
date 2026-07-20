@@ -29,30 +29,15 @@ def load_profiles() -> pd.DataFrame:
         PROFILES_PATH
     )
 
-def calculate_percentiles(
-    population: pd.DataFrame,
-    metrics: list[str],
-    lower_is_better: set[str],
-) -> pd.DataFrame:
+def radar_value(
+    metric: str,
+    percentile: float,
+) -> float:
 
-    population = population.copy()
+    if metric in LOWER_IS_BETTER:
+        return 100 - percentile
 
-    for metric in metrics:
-
-        ascending = (
-            metric in lower_is_better
-        )
-
-        population[f"{metric}_pct"] = (
-            population[metric]
-            .rank(
-                pct=True,
-                ascending=ascending,
-            )
-            * 100
-        )
-
-    return population
+    return percentile
 
 def get_profile(
     profiles: pd.DataFrame,
@@ -81,14 +66,24 @@ def build_radar_values(
         for m in metrics
     ]
 
-    values = [
+    plot_values = [
+        radar_value(
+            m,
+            profile[f"{m}_pct"],
+        )
+        for m in metrics
+    ]
+
+    percentiles = [
         profile[f"{m}_pct"]
         for m in metrics
     ]
 
-    values.append(values[0])
-
-    return labels, values
+    return (
+        labels,
+        plot_values,
+        percentiles,
+    )
 
 
 def slugify(text: str) -> str:
@@ -348,16 +343,6 @@ def generate_radars(
     profile_ids: list[str],
     population: pd.DataFrame,
 ):
-
-    role = population.iloc[0]["role"]
-
-    metrics = RADAR_METRICS[role]
-
-    population = calculate_percentiles(
-        population=population,
-        metrics=metrics,
-        lower_is_better=LOWER_IS_BETTER,
-    )
 
     if len(profile_ids) == 1:
 

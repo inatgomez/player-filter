@@ -7,7 +7,7 @@ from config.role_config import (
     DISPLAY_NAMES,
     LOWER_IS_BETTER,
 )
-from radar import generate_radars
+from radar import generate_single_radar, generate_comparison_radar
 
 PROFILES_PATH = Path(
     "data/processed/player_profiles.parquet"
@@ -404,8 +404,8 @@ def search_flow(profiles):
 
         return
 
-    generate_radars(
-        profile_ids=[profile_id],
+    generate_single_radar(
+        profile_id=profile_id,
         population=population,
     )
 
@@ -416,6 +416,16 @@ def radar_prompt(population):
     ).lower()
 
     if answer != "y":
+        return
+
+    print_header("Radar Type")
+    print("1. Single radar(s) — one or more players")
+    print("2. Comparison radar — exactly two players")
+
+    mode = input("\nSelect option: ").strip()
+
+    if mode not in ("1", "2"):
+        print("\nInvalid selection.")
         return
 
     rows = input(
@@ -438,26 +448,37 @@ def radar_prompt(population):
 
         return
 
-    if len(row_ids) > 2:
-
-        print(
-            "\nComparison radar "
-            "supports a maximum "
-            "of two players."
-        )
-
-        return
-
     selected_profiles = (
         population.iloc[row_ids]
         ["profile_id"]
         .tolist()
     )
 
-    generate_radars(
-        profile_ids=selected_profiles,
-        population=population,
-    )
+    if mode == "1":
+
+        for profile_id in selected_profiles:
+
+            generate_single_radar(
+                profile_id=profile_id,
+                population=population,
+            )
+
+    else:
+
+        if len(selected_profiles) != 2:
+
+            print(
+                "\nComparison radar "
+                "requires exactly "
+                "two players."
+            )
+
+            return
+
+        generate_comparison_radar(
+            profile_ids=selected_profiles,
+            population=population,
+        )
 
 def main():
 

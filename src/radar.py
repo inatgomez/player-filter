@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from config.role_config import (
     RADAR_METRICS,
     DISPLAY_NAMES,
+    LOWER_IS_BETTER,
 )
 
 PROFILES_PATH = Path(
@@ -347,6 +348,16 @@ def generate_radars(
     profile_ids: list[str],
     population: pd.DataFrame,
 ):
+
+    role = population.iloc[0]["role"]
+
+    metrics = RADAR_METRICS[role]
+
+    population = calculate_percentiles(
+        population=population,
+        metrics=metrics,
+        lower_is_better=LOWER_IS_BETTER,
+    )
 
     if len(profile_ids) == 1:
 

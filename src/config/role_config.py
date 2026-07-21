@@ -25,8 +25,8 @@ ROLE_METRICS = {
         "npxg_per90",
         "npxg_per_shot",
         "padj_pressures_per90",
-        "fouls_won_per90",
         "turnovers_per90",
+        "fouls_won_per90",
     ],
 }
 
@@ -78,7 +78,7 @@ RADAR_METRICS = {
         "npxg_per90",
         "npxg_per_shot",
         "padj_pressures_per90",
-        "fouls_won_per90",
         "turnovers_per90",
+        "fouls_won_per90",
     ],
 }

@@ -7,7 +7,6 @@ from mplsoccer import Radar
 from config.role_config import (
     RADAR_METRICS,
     DISPLAY_NAMES,
-    LOWER_IS_BETTER,
 )
 
 PROFILES_PATH = Path(
@@ -28,16 +27,6 @@ def load_profiles() -> pd.DataFrame:
     return pd.read_parquet(
         PROFILES_PATH
     )
-
-def radar_value(
-    metric: str,
-    percentile: float,
-) -> float:
-
-    if metric in LOWER_IS_BETTER:
-        return 100 - percentile
-
-    return percentile
 
 def get_profile(
     profiles: pd.DataFrame,
@@ -66,24 +55,12 @@ def build_radar_values(
         for m in metrics
     ]
 
-    plot_values = [
-        radar_value(
-            m,
-            profile[f"{m}_pct"],
-        )
-        for m in metrics
-    ]
-
-    percentiles = [
+    values = [
         profile[f"{m}_pct"]
         for m in metrics
     ]
 
-    return (
-        labels,
-        plot_values,
-        percentiles,
-    )
+    return labels, values
 
 
 def slugify(text: str) -> str:
@@ -120,6 +97,60 @@ def single_radar_filename(
         / f"{player}_{competition}_{season}_{role}.png"
     )
 
+def build_metric_table_rows(
+    profile: pd.Series,
+    metrics: list[str],
+) -> list[list[str]]:
+
+    return [
+        [
+            DISPLAY_NAMES[m],
+            f"{profile[m]:.2f}",
+            f"{profile[f'{m}_pct']:.0f}",
+        ]
+        for m in metrics
+    ]
+
+def draw_metric_table(
+    fig,
+    rows: list[list[str]],
+    bbox: list[float],
+    col_labels: list[str] = None,
+):
+
+    ax = fig.add_axes(bbox)
+    ax.axis("off")
+
+    col_labels = col_labels or ["Metric", "Value", "Pct"]
+
+    table = ax.table(
+        cellText=rows,
+        colLabels=col_labels,
+        cellLoc="center",
+        loc="center",
+        colWidths=[0.55, 0.225, 0.225],
+    )
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 2.0)
+
+    header_color = "#1565c0"
+    row_colors = ["#ffffff", "#eef3fa"]
+
+    for (row, col), cell in table.get_celld().items():
+
+        cell.set_edgecolor("#cccccc")
+        cell.set_linewidth(0.6)
+
+        if row == 0:
+            cell.set_facecolor(header_color)
+            cell.set_text_props(weight="bold", color="white")
+        else:
+            cell.set_facecolor(row_colors[(row - 1) % 2])
+
+    return table
+
 def generate_single_radar(
     profile_id: str,
     population: pd.DataFrame,
@@ -137,7 +168,6 @@ def generate_single_radar(
     (
         labels,
         values,
-        percentiles,
     ) = build_radar_values(
         profile,
         metrics,
@@ -150,8 +180,10 @@ def generate_single_radar(
     )
 
     fig, ax = radar.setup_axis(
-        figsize=(10, 10),
+        figsize=(14, 10),
     )
+
+    ax.set_position([0.03, 0.08, 0.55, 0.82])
 
     radar.draw_circles(
         ax=ax,
@@ -209,6 +241,9 @@ def generate_single_radar(
         profile
     )
 
+    rows = build_metric_table_rows(profile, metrics)
+    draw_metric_table(fig, rows, bbox=[0.62, 0.2, 0.34, 0.6])
+
     plt.savefig(
         filepath,
         dpi=300,
@@ -258,8 +293,10 @@ def generate_comparison_radar(
     )
 
     fig, ax = radar.setup_axis(
-        figsize=(10, 10),
+        figsize=(16, 10),
     )
+
+    ax.set_position([0.03, 0.1, 0.5, 0.8])
 
     radar.draw_circles(
         ax=ax,
@@ -283,10 +320,7 @@ def generate_comparison_radar(
     ):
 
         values = [
-            radar_value(
-                metric,
-                profile[f"{metric}_pct"],
-            )
+            profile[f"{metric}_pct"]
             for metric in metrics
         ]
 
@@ -336,6 +370,17 @@ def generate_comparison_radar(
         OUTPUT_DIR
         / f"{players}_{slugify(role)}.png"
     )
+
+    y_positions = [0.55, 0.05]
+
+    for idx, (_, profile) in enumerate(profiles.iterrows()):
+        rows = build_metric_table_rows(profile, metrics)
+        draw_metric_table(
+            fig,
+            rows,
+            bbox=[0.58, y_positions[idx], 0.38, 0.4],
+            col_labels=[profile["player_name"], "Value", "Pct"],
+        )
 
     plt.savefig(
         filepath,

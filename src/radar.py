@@ -348,22 +348,3 @@ def generate_comparison_radar(
         f"Saved comparison radar: "
         f"{filepath}"
     )
-
-def generate_radars(
-    profile_ids: list[str],
-    population: pd.DataFrame,
-):
-
-    if len(profile_ids) == 1:
-
-        generate_single_radar(
-            profile_ids[0],
-            population,
-        )
-
-    else:
-
-        generate_comparison_radar(
-            profile_ids,
-            population,
-        )

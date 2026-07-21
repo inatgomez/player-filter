@@ -137,7 +137,6 @@ def generate_single_radar(
     (
         labels,
         values,
-        percentiles,
     ) = build_radar_values(
         profile,
         metrics,
@@ -166,10 +165,11 @@ def generate_single_radar(
         kwargs_radar={
             "linewidth": 3,
             "color": "#1565c0",
+            "alpha": 0.3,
         },
         kwargs_rings={
             "facecolor": "#1565c0",
-            "alpha": 0.18,
+            "alpha": 0.2,
         },
     )
 
@@ -296,6 +296,7 @@ def generate_comparison_radar(
                 "linewidth": 3,
                 "linestyle": linestyles[idx],
                 "color": colors[idx],
+                "alpha": 0.3,
                 "label": profile[
                     "player_name"
                 ],

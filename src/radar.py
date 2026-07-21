@@ -147,7 +147,15 @@ def draw_metric_table(
             cell.set_facecolor(header_color)
             cell.set_text_props(weight="bold", color="white")
         else:
-            cell.set_facecolor(row_colors[(row - 1) % 2])
+            pct = float(rows[row - 1][2])
+
+            if col == 2:
+
+                if pct >= 75:
+                    cell.set_facecolor("#d8f3dc")
+
+                elif pct <= 25:
+                    cell.set_facecolor("#ffccd5")
 
     return table
 

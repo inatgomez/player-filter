@@ -236,13 +236,14 @@ def generate_single_radar(
     )
 
     ax.set_title(
-        (
-            f"{profile['player_name']}\n"
-            f"{profile['competition_name']} | "
-            f"{profile['season']}\n"
-            f"{profile['role']}"
-        ),
-        pad=30,
+    (
+        f"{profile['player_name']}\n"
+        f"{profile['team_name']}\n"
+        f"{profile['competition_name']} | "
+        f"{profile['season']}\n"
+        f"{profile['role']}"
+    ),
+    pad=30,
     )
 
     filepath = single_radar_filename(
@@ -379,15 +380,29 @@ def generate_comparison_radar(
         / f"{players}_{slugify(role)}.png"
     )
 
-    y_positions = [0.55, 0.05]
+    y_positions = [0.50, 0.00]
 
     for idx, (_, profile) in enumerate(profiles.iterrows()):
         rows = build_metric_table_rows(profile, metrics)
+        fig.text(
+            0.58,
+            y_positions[idx] + 0.42,
+            (
+                f"{profile['player_name']}\n"
+                f"{profile['role']}\n"
+                f"{profile['season']}\n"
+                f"{profile['competition_name']}\n"
+                f"{profile['team_name']}"
+            ),
+            fontsize=10,
+            weight="bold",
+            va="bottom",
+        )
         draw_metric_table(
             fig,
             rows,
             bbox=[0.58, y_positions[idx], 0.38, 0.4],
-            col_labels=[profile["player_name"], "Value", "Pct"],
+            col_labels=["Metric", "Value", "Pct"],
         )
 
     plt.savefig(

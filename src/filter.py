@@ -279,6 +279,7 @@ def ranking_flow(profiles):
 
     display_cols = [
         "player_name",
+        "team_name",
         "competition_name",
         "season",
         "minutes_played",
@@ -334,6 +335,7 @@ def search_player_in_population(
 
     display_cols = [
         "player_name",
+        "team_name",
         "competition_name",
         "season",
         "role",

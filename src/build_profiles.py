@@ -124,6 +124,8 @@ def add_profile_id(df):
         + "|"
         + df["competition_name"]
         + "|"
+        + df["team_name"]
+        + "|"
         + df["season"]
         + "|"
         + df["role"]
@@ -263,6 +265,7 @@ def build_profiles() -> None:
             subset=[
                 "player_id",
                 "competition_name",
+                "team_name",
                 "role",
                 "season",
             ]

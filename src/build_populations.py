@@ -97,6 +97,7 @@ def build_lineup_position_shares(lineups):
                 "player_id",
                 "player_name",
                 "competition_name",
+                "team_name",
                 "season",
                 "position_list",
             ]
@@ -113,6 +114,7 @@ def build_lineup_position_shares(lineups):
                 "player_id",
                 "player_name",
                 "competition_name",
+                "team_name",
                 "season",
                 "position",
             ],
@@ -129,6 +131,7 @@ def build_lineup_position_shares(lineups):
                 "player_id",
                 "player_name",
                 "competition_name",
+                "team_name",
                 "season",
             ],
             as_index=False,
@@ -143,6 +146,7 @@ def build_lineup_position_shares(lineups):
             "player_id",
             "player_name",
             "competition_name",
+            "team_name",
             "season",
         ],
         how="left",
@@ -169,6 +173,7 @@ def build_event_position_shares(events):
                 "player_id",
                 "player",
                 "competition_name",
+                "team",
                 "season",
                 "position",
             ],
@@ -185,6 +190,7 @@ def build_event_position_shares(events):
                 "player_id",
                 "player",
                 "competition_name",
+                "team",
                 "season",
             ],
             as_index=False,
@@ -199,9 +205,16 @@ def build_event_position_shares(events):
             "player_id",
             "player",
             "competition_name",
+            "team",
             "season",
         ],
         how="left",
+    )
+
+    shares = shares.rename(
+    columns={
+        "team": "team_name",
+    }
     )
 
     shares["position_share"] = (
@@ -230,6 +243,7 @@ def get_role_shares(
                 "player_id",
                 player_col,
                 "competition_name",
+                "team_name",
                 "season",
             ],
             as_index=False,
@@ -301,6 +315,7 @@ def build_populations() -> None:
                     "player_id",
                     "player_name",
                     "competition_name",
+                    "team_name",
                     "season",
                 ],
                 how="outer",
@@ -320,6 +335,7 @@ def build_populations() -> None:
                     "player_id",
                     "player_name",
                     "competition_name",
+                    "team_name",
                     "season",
                     "role",
                     "lineup_share",

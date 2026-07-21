@@ -300,16 +300,19 @@ def ranking_flow(profiles):
 
     radar_prompt(population)
 
-def search_flow(profiles):
+def search_player_in_population(
+    population: pd.DataFrame,
+    label: str,
+):
 
-    print_header("Player Search")
+    print_header(label)
 
     query = input(
         "Player name: "
     ).strip()
 
-    matches = profiles[
-        profiles["player_name"]
+    matches = population[
+        population["player_name"]
         .str.contains(
             query,
             case=False,
@@ -320,11 +323,10 @@ def search_flow(profiles):
     if matches.empty:
 
         print(
-            "\nNo matches found. "
-            "Make sure to use full name."
+            "\nNo matches found."
         )
 
-        return
+        return None
 
     matches = matches.reset_index(
         drop=True
@@ -348,7 +350,7 @@ def search_flow(profiles):
 
         row = int(
             input(
-                "\nSelect player row: "
+                "\nSelect row: "
             )
         )
 
@@ -358,7 +360,7 @@ def search_flow(profiles):
             "\nInvalid selection."
         )
 
-        return
+        return None
 
     if row not in matches.index:
 
@@ -366,14 +368,29 @@ def search_flow(profiles):
             "\nInvalid selection."
         )
 
-        return
+        return None
 
-    selected_profile = (
-        matches.iloc[row]
+    return matches.iloc[row]
+
+def choose_role_population(
+    profiles: pd.DataFrame,
+):
+
+    print_header("Role Selection")
+
+    roles = sorted(
+        profiles["role"].unique()
     )
 
-    role = (
-        selected_profile["role"]
+    for i, role in enumerate(
+        roles,
+        start=1,
+    ):
+        print(f"{i}. {role}")
+
+    role = choose_option(
+        roles,
+        "\nRole: ",
     )
 
     population = (
@@ -383,29 +400,101 @@ def search_flow(profiles):
         )
     )
 
-    if population.empty:
-        return
+    return role, population
 
-    profile_id = (
-        selected_profile["profile_id"]
-    )
+def search_flow(profiles):
 
-    if profile_id not in set(
-        population["profile_id"]
-    ):
+    print_header("Player Search")
 
-        print(
-            "\nSelected player is not "
-            "part of the chosen "
-            "comparison population."
+    print("1. Comparison radar")
+    print("2. Single radar(s)")
+
+    mode = input(
+        "\nSelect option: "
+    ).strip()
+
+    if mode == "1":
+
+        role, population = (
+            choose_role_population(
+                profiles
+            )
         )
 
-        return
+        if population.empty:
+            return
 
-    generate_single_radar(
-        profile_id=profile_id,
-        population=population,
-    )
+        player_1 = (
+            search_player_in_population(
+                population,
+                "Player 1",
+            )
+        )
+
+        if player_1 is None:
+            return
+
+        player_2 = (
+            search_player_in_population(
+                population,
+                "Player 2",
+            )
+        )
+
+        if player_2 is None:
+            return
+        
+        if (
+            player_1["profile_id"]
+            == player_2["profile_id"]
+        ):
+
+            print(
+                "\nPlease select two "
+                "different players."
+            )
+
+            return
+
+        generate_comparison_radar(
+            profile_ids=[
+                player_1["profile_id"],
+                player_2["profile_id"],
+            ],
+            population=population,
+        )
+
+    elif mode == "2":
+
+        role, population = (
+            choose_role_population(
+                profiles
+            )
+        )
+
+        if population.empty:
+            return
+
+        player = (
+            search_player_in_population(
+                population,
+                "Player",
+            )
+        )
+
+        if player is None:
+            return
+
+        generate_single_radar(
+            profile_id=player["profile_id"],
+            population=population,
+        )
+
+    else:
+
+        print(
+            "\nInvalid selection."
+        )
 
 def radar_prompt(population):
 

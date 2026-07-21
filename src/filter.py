@@ -278,7 +278,6 @@ def ranking_flow(profiles):
     ).reset_index(drop=True)
 
     display_cols = [
-        "profile_id",
         "player_name",
         "competition_name",
         "season",
@@ -332,7 +331,6 @@ def search_flow(profiles):
     )
 
     display_cols = [
-        "profile_id",
         "player_name",
         "competition_name",
         "season",

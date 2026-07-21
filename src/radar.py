@@ -137,6 +137,7 @@ def generate_single_radar(
     (
         labels,
         values,
+        percentiles,
     ) = build_radar_values(
         profile,
         metrics,
